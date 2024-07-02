@@ -1,0 +1,29 @@
+<template>
+  <header>
+    <div
+      class="container flex flex-col md:flex-row gap-5 items-center justify-between"
+    >
+      <IconAtabix class="text-white h-10" :fontControlled="false" />
+
+      <p class="text-xl">{{ currentDate }}</p>
+
+      <NuxtImg src="/febo.png" width="143" height="40" />
+    </div>
+  </header>
+</template>
+
+<script setup>
+import IconAtabix from "~/assets/icons/atabix.svg";
+
+const currentDate = new Date().toLocaleDateString("nl-NL", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+</script>
+
+<style scoped>
+header {
+  @apply py-5 bg-green-1 text-white;
+}
+</style>
