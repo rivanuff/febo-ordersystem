@@ -1,5 +1,18 @@
 {
   "general": {
-    "title": "FEBO Order System"
+    "title": "FEBO Order System",
+    "switch-lang": "Ga naar Nederlands"
+  },
+  "form": {
+    "employee-id": "What's your employee ID?",
+    "next": "Next",
+    "order": "Order",
+    "back": "back",
+    "product": "Product",
+    "extra": "Extra",
+    "options": "Options",
+    "order-so-far": "Order so far",
+    "order-of": "Order of",
+    "no-order": "No order has been started yet!"
   }
 }

@@ -5,14 +5,13 @@
     >
       <IconAtabix class="text-white h-10" :fontControlled="false" />
 
-      <p class="text-xl">{{ currentDate }}</p>
-
-      <NuxtImg src="/febo.png" width="143" height="40" />
+      <NuxtImg src="/febo.png" width="143" height="40" class="select-none" />
     </div>
   </header>
 </template>
 
 <script setup>
+const { locale, setLocale } = useI18n();
 import IconAtabix from "~/assets/icons/atabix.svg";
 
 const currentDate = new Date().toLocaleDateString("nl-NL", {

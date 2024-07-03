@@ -1,5 +1,18 @@
 {
   "general": {
-    "title": "FEBO Bestel Systeem"
+    "title": "FEBO Bestel Systeem",
+    "switch-lang": "Switch to English"
+  },
+  "form": {
+    "employee-id": "Wat is je employee ID?",
+    "next": "Volgende",
+    "order": "Bestel",
+    "back": "Terug",
+    "product": "Product",
+    "extra": "Extra",
+    "options": "Opties",
+    "order-so-far": "Bestelling tot nu toe",
+    "order-of": "Bestelling van",
+    "no-order": "Er is nog geen bestelling!"
   }
 }

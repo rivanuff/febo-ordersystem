@@ -1,10 +1,11 @@
 <script setup>
-const { locale, setLocale } = useI18n();
+const { t, locale } = useI18n();
 const supabase = useSupabaseClient();
 const { data: products } = await supabase.from("products").select();
 const { data: productOptions } = await supabase
   .from("product_options")
   .select();
+
 const state = reactive({
   employee_id: null,
   employee: { id: 0, first_name: "", last_name: "" },
@@ -16,11 +17,11 @@ const state = reactive({
 const tableColumns = [
   {
     key: "product_name",
-    label: "Product",
+    label: t("form.product"),
   },
   {
     key: "option_name",
-    label: "Extra",
+    label: t("form.extra"),
   },
   {
     key: "quantity",
@@ -32,7 +33,7 @@ const tableColumns = [
   },
   {
     key: "actions",
-    label: "Options",
+    label: t("form.options"),
   },
 ];
 
@@ -52,7 +53,63 @@ async function getEmployee() {
 
   if (!error) {
     state.employee = employee;
+    await loadExistingOrder(employee.id);
     state.pageIndex++;
+  }
+}
+
+async function loadExistingOrder(employeeId) {
+  const { data: existingOrder, error: noExistingOrder } = await supabase
+    .from("orders")
+    .select()
+    .eq("date", new Date().toISOString().split("T")[0])
+    .single();
+
+  if (!noExistingOrder) {
+    const { data: orderDetails, error } = await supabase
+      .from("order_details")
+      .select()
+      .eq("employee_id", employeeId)
+      .eq("order_id", existingOrder.id);
+
+    state.orderDetails = orderDetails.map((detail) => {
+      const product = products.find(
+        (product) => product.id == detail.product_id
+      );
+
+      if (detail.product_option_id != null) {
+        const productOption = productOptions.find(
+          (option) => option.id == detail.product_option_id
+        );
+
+        return {
+          product_id: product.id,
+          option_id: productOption.id,
+          product_name:
+            locale == "en" ? product.english_name : product.dutch_name,
+          option_name:
+            locale == "en"
+              ? productOption.english_name
+              : productOption.dutch_name,
+          quantity: detail.quantity,
+          price: (product.price + productOption.price) * detail.quantity,
+        };
+      } else {
+        return {
+          product_id: product.id,
+          option_id: null,
+          product_name:
+            locale == "en" ? product.english_name : product.dutch_name,
+          option_name: null,
+          quantity: detail.quantity,
+          price: product.price * detail.quantity,
+        };
+      }
+    });
+
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -132,7 +189,60 @@ function lessenProduct(productId, optionId) {
 }
 
 async function onSubmit(event) {
-  console.log(event.data);
+  let orderId = 0;
+
+  const { data: existingOrder, error: noExistingOrder } = await supabase
+    .from("orders")
+    .select()
+    .eq("date", new Date().toISOString().split("T")[0])
+    .single();
+
+  if (noExistingOrder) {
+    const { data: newOrder, error } = await supabase
+      .from("orders")
+      .insert({ date: new Date().toISOString().split("T")[0] })
+      .select("id")
+      .single();
+
+    orderId = newOrder.id;
+
+    if (error) throw new Error("Something went wrong while creating new order");
+  } else {
+    orderId = existingOrder.id;
+
+    // Delete existing order details to overwrite
+    const { error } = await supabase
+      .from("order_details")
+      .delete()
+      .eq("order_id", orderId)
+      .eq("employee_id", event.data.employee.id);
+  }
+
+  const { error } = await supabase.from("order_details").insert(
+    event.data.orderDetails.map((detail) => {
+      if (detail.option_id != null) {
+        return {
+          order_id: orderId,
+          employee_id: event.data.employee.id,
+          product_id: detail.product_id,
+          product_option_id: detail.option_id,
+          quantity: detail.quantity,
+        };
+      } else {
+        return {
+          order_id: orderId,
+          employee_id: event.data.employee.id,
+          product_id: detail.product_id,
+          quantity: detail.quantity,
+        };
+      }
+    })
+  );
+
+  if (error)
+    throw new Error("Something went wrong while creating order details");
+
+  state.pageIndex--;
 }
 </script>
 
@@ -140,7 +250,7 @@ async function onSubmit(event) {
   <div class="component order-form mt-10">
     <UForm :state="state" class="max-w-xl mx-auto space-y-4" @submit="onSubmit">
       <UFormGroup
-        label="What's your employee ID?"
+        :label="$t(`form.employee-id`)"
         name="employee_id"
         :class="
           state.pageIndex == 0
@@ -155,7 +265,7 @@ async function onSubmit(event) {
             class="bg-green-2 hover:bg-green-2 disabled:bg-green-2 disabled:grayscale hover:opacity-75 transition-opacity"
             @click="getEmployee()"
             :disabled="!state.employee_id"
-            >Next</UButton
+            >{{ $t("form.next") }}</UButton
           >
         </div>
       </UFormGroup>
@@ -166,7 +276,7 @@ async function onSubmit(event) {
         "
       >
         <h3 class="text-2xl text-center text-green-2 mb-5">
-          Bestelling van
+          {{ $t("form.order-of") }}
           <span class="font-medium">{{
             ` ${state.employee.first_name} ${state.employee.last_name}`
           }}</span>
@@ -247,17 +357,25 @@ async function onSubmit(event) {
             type="button"
             class="bg-green-2 hover:bg-green-2 hover:opacity-75 transition-opacity"
             @click="state.pageIndex--"
-            >Go back</UButton
+            >{{ $t("form.back") }}</UButton
           >
 
           <UButton
             type="submit"
             class="bg-green-2 hover:bg-green-2 hover:opacity-75 transition-opacity"
-            >Order</UButton
+            >{{ $t("form.order") }}</UButton
           >
         </div>
       </div>
     </UForm>
+
+    <Suspense v-if="state.pageIndex == 0">
+      <OrderOverview />
+
+      <template #fallback>
+        <USkeleton class="h-[300px] w-full mt-16 rounded-xl" />
+      </template>
+    </Suspense>
   </div>
 </template>
 
