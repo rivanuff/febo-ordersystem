@@ -5,7 +5,7 @@
     >
       <IconAtabix class="text-white h-10" :fontControlled="false" />
 
-      <p class="text-xl">{{ currentDate }}</p>
+      <p class="text-xl font-medium">{{ currentDate }}</p>
 
       <NuxtImg src="/febo.png" width="143" height="40" class="select-none" />
     </div>
