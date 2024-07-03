@@ -12,8 +12,8 @@ The rebuttal
 
 ## To-Do:
 
-- Placing order
-- Showing & overwriting existing order if there is one
+- ~~Placing order~~
+- ~~Showing & overwriting existing employee order~~
+- ~~Responsiveness~~
 - Allow employee creation
-- Responsiveness
 - Code cleanup
